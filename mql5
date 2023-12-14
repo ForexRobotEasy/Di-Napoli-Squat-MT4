@@ -1,0 +1,70 @@
+
+//+------------------------------------------------------------------+
+//|                                                Di Napoli Squat MT4|
+//|                                                  forexroboteasy.com|
+//|                                             Forex Robot Easy Team|
+//+------------------------------------------------------------------+
+
+//+------------------------------------------------------------------+
+//|                                              Indicator Constants |
+//+------------------------------------------------------------------+
+#define INDICATOR_NAME        'Di Napoli Squat'
+#define INDICATOR_VERSION     '1.0'
+#define INDICATOR_AUTHOR      'Forex Robot Easy Team'
+
+//+------------------------------------------------------------------+
+//|                                            Indicator Parameters |
+//+------------------------------------------------------------------+
+extern int    Period           = 14;      // Period for calculating Fibonacci levels
+extern double RetracementLevel = 0.618;   // Fibonacci retracement level for identifying support/resistance
+extern double StopLossRatio    = 0.01;    // Ratio of stop loss to take profit
+
+//+------------------------------------------------------------------+
+//|                                                 Global Variables |
+//+------------------------------------------------------------------+
+double g_StopLoss;         // Stop loss level
+double g_TakeProfit;       // Take profit level
+
+//+------------------------------------------------------------------+
+//|                                                   Indicator Init |
+//+------------------------------------------------------------------+
+int OnInit()
+{
+    // Set indicator title and parameters
+    IndicatorSetString(INDICATOR_SHORTNAME, INDICATOR_NAME);
+    IndicatorSetString(INDICATOR_LEVELS, '0.0');
+
+    // Set indicator buffers
+    SetIndexBuffer(0, g_StopLoss);
+    SetIndexBuffer(1, g_TakeProfit);
+
+    // Set indicator style and color
+    SetIndexStyle(0, DRAW_LINE);
+    SetIndexStyle(1, DRAW_LINE);
+    SetIndexDrawBegin(0, Period);
+
+    return(INIT_SUCCEEDED);
+}
+
+//+------------------------------------------------------------------+
+//|                                                  Indicator Start |
+//+------------------------------------------------------------------+
+int OnCalculate(const int rates_total, const int prev_calculated, const datetime &time[], const double &open[], const double &high[], const double &low[], const double &close[], const long &tick_volume[], const long &volume[], const int &spread[])
+{
+    // Calculate Fibonacci levels
+    double fibRetracementLevel = (high[0] - low[0]) * RetracementLevel;
+    double supportLevel = high[0] - fibRetracementLevel;
+    double resistanceLevel = low[0] + fibRetracementLevel;
+
+    // Determine stop loss and take profit levels
+    g_StopLoss = close[0] - (close[0] - supportLevel) * StopLossRatio;
+    g_TakeProfit = close[0] + (resistanceLevel - close[0]) * StopLossRatio;
+
+    // Plot stop loss and take profit levels
+    PlotIndexSetDouble(0, PLOT_EMPTY_VALUE, 0);
+    PlotIndexSetDouble(0, 0, g_StopLoss);
+    PlotIndexSetDouble(1, PLOT_EMPTY_VALUE, 0);
+    PlotIndexSetDouble(1, 0, g_TakeProfit);
+
+    return(rates_total);
+}
